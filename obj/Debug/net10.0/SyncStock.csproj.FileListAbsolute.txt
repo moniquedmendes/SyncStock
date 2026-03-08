@@ -222,3 +222,4 @@ C:\Users\Monique Mendes\Desktop\faculdade\7 Semestre\APS\SyncStock\bin\Debug\net
 C:\Users\Monique Mendes\Desktop\faculdade\7 Semestre\APS\SyncStock\bin\Debug\net10.0\runtimes\win-x64\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Monique Mendes\Desktop\faculdade\7 Semestre\APS\SyncStock\bin\Debug\net10.0\runtimes\win-x86\native\Microsoft.Data.SqlClient.SNI.dll
 C:\Users\Monique Mendes\Desktop\faculdade\7 Semestre\APS\SyncStock\obj\Debug\net10.0\SyncStock.csproj.Up2Date
+C:\Users\Monique Mendes\Desktop\faculdade\7 Semestre\APS\SyncStock\obj\Debug\net10.0\SyncStock.sourcelink.json
