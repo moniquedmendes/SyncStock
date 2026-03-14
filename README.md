@@ -58,6 +58,7 @@ O objetivo do projeto é gerenciar produtos, movimentações de entrada e saída
     HomeController
     ProdutoController
     MovimentacaoController
+    UsuarioController
 
 /Models
     Usuario
@@ -69,6 +70,7 @@ O objetivo do projeto é gerenciar produtos, movimentações de entrada e saída
     /Home
     /Produto
     /Movimentacao
+    
 
 /Data
     ApplicationDbContext
