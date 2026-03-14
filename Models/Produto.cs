@@ -10,4 +10,5 @@ public class Produto
     public decimal Preco { get; set; }
     public int QuantidadeEstoque { get; set; }
     public int EstoqueMinimo { get; set; }
+    public bool Ativo { get; set; }
 }

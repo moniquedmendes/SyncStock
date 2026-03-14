@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SyncStock")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ecd07f20e416d752b8a4a387dbaa3d2c6df68495")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+4b70e2b61649a0ea89af72a5080e960ab49aa50b")]
 [assembly: System.Reflection.AssemblyProductAttribute("SyncStock")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SyncStock")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

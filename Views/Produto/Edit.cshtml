@@ -1,0 +1,36 @@
+@model SyncStock.Models.Produto
+
+<h2>Editar Produto</h2>
+
+<form asp-action="Edit" method="post">
+
+<input type="hidden" asp-for="Id" />
+
+<label>Código</label>
+<input asp-for="Codigo" class="form-control">
+
+<label>Nome</label>
+<input asp-for="Nome" class="form-control">
+
+<label>Categoria</label>
+<input asp-for="Categoria" class="form-control">
+
+<label>Marca</label>
+<input asp-for="Marca" class="form-control">
+
+<label>Fornecedor</label>
+<input asp-for="Fornecedor" class="form-control">
+
+<label>Preço</label>
+<input asp-for="Preco" class="form-control">
+
+<label>Estoque</label>
+<input asp-for="QuantidadeEstoque" class="form-control">
+
+<br>
+
+<button type="submit" class="btn btn-success">
+Salvar Alterações
+</button>
+
+</form>

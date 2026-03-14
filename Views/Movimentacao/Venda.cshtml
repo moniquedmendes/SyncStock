@@ -1,0 +1,30 @@
+<h2>Registrar Venda</h2>
+
+<form method="post">
+
+<label>Produto</label>
+
+<select name="produtoId" class="form-control">
+
+@foreach(var produto in ViewBag.Produtos)
+{
+<option value="@produto.Id">
+@produto.Nome (Estoque: @produto.QuantidadeEstoque)
+</option>
+}
+
+</select>
+
+<br>
+
+<label>Quantidade</label>
+
+<input type="number" name="quantidade" class="form-control">
+
+<br>
+
+<button type="submit" class="btn btn-success">
+Confirmar Venda
+</button>
+
+</form>

@@ -1,17 +1,90 @@
 ﻿@using Microsoft.AspNetCore.Http
+@using SyncStock.Models
 
 @{
     ViewData["Title"] = "Home Page";
+
+    var vendas = ViewBag.Vendas as List<Movimentacao>;
+    var alertas = ViewBag.Alertas as List<Produto>;
 }
 
+<h1 class="display-4 text-center">
+    BEM VINDO @Context.Session.GetString("UsuarioLogado")
+</h1>
 
-<div class="text-center">
-    <h1 class="display-4">
-        Welcome @Context.Session.GetString("UsuarioLogado")
-    </h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<br>
 
-    <a href="../Produto/Cadastro">Cadastro de Produtos</a>
+<div class="row">
+
+    <!-- HISTÓRICO DE VENDAS -->
+    <div class="col-md-6">
+
+        <h3>Últimas Vendas</h3>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Quantidade</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var venda in vendas)
+                {
+                    <tr>
+                        <td>@venda.Produto.Nome</td>
+                        <td>@venda.Quantidade</td>
+                        <td>@venda.Data.ToString("dd/MM HH:mm")</td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- ALERTA ESTOQUE -->
+    <div class="col-md-6">
+
+        <h3>Estoque Baixo</h3>
+
+        <table class="table table-danger">
+
+            <thead>
+                <tr>
+                    <th>Produto</th>
+                    <th>Estoque</th>
+                    <th>Mínimo</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                @foreach (var produto in alertas)
+                {
+                    <tr>
+                        <td>@produto.Nome</td>
+                        <td>@produto.QuantidadeEstoque</td>
+                        <td>@produto.EstoqueMinimo</td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
 </div>
 
+<br>
+
+<a href="../Produto/Cadastro">Cadastro de Produtos</a>
+<br>
+<a href="../Produto/Produtos">Produtos</a>
+<br>
+<a href="../Movimentacao/Venda">Venda</a>
 

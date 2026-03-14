@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SyncStock.Contexts;
 
+//dotnet watch o comando pra iniciar ou dotnet run
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
