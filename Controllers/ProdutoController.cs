@@ -40,11 +40,13 @@ namespace SyncStock.Controllers
 
             if (produto != null)
             {
-                _context.Produtos.Remove(produto);
+                // Soft-delete the product
+                produto.Ativo = false;
+                _context.Produtos.Update(produto);
                 _context.SaveChanges();
             }
 
-            return RedirectToAction("Index");
+            return RedirectToAction("Produtos");
         }
 
         public IActionResult Edit(int id)
