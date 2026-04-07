@@ -31,7 +31,7 @@ export function SettingsScreen() {
                 Nome da Empresa
               </Label>
               <Input
-                defaultValue="AutoParts LTDA"
+                defaultValue="Sync Stock Brasil LTDA"
                 className="h-10 border-border bg-secondary text-foreground focus-visible:ring-primary"
               />
             </div>

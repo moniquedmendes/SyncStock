@@ -6,8 +6,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 
 export const metadata: Metadata = {
-  title: 'AutoParts ERP - Sistema de Gestao de Pecas Automotivas',
-  description: 'Sistema corporativo de gestao de inventario de pecas automotivas',
+  title: 'Sync Stock - Sistema de Gestao de Estoque',
+  description: 'Sistema corporativo de gestao de inventario e sincronizacao de estoque',
 }
 
 export const viewport: Viewport = {
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Analytics />

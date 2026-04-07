@@ -29,7 +29,7 @@ export function AppHeader() {
           </div>
           <div className="hidden md:block">
             <p className="text-sm font-medium text-foreground">Administrador</p>
-            <p className="text-xs text-muted-foreground">admin@autoparts.com</p>
+            <p className="text-xs text-muted-foreground">admin@syncstock.com</p>
           </div>
         </div>
       </div>

@@ -32,10 +32,10 @@ export function LoginScreen() {
             </div>
             <div className="text-center">
               <h1 className="text-xl font-bold tracking-tight text-foreground">
-                AutoParts ERP
+                Sync Stock
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Sistema de Gestao de Pecas Automotivas
+                Sistema de Gestao de Estoque Inteligente
               </p>
             </div>
           </div>
@@ -101,7 +101,7 @@ export function LoginScreen() {
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            AutoParts ERP v2.0 - Todos os direitos reservados
+            Sync Stock v1.0 - Todos os direitos reservados
           </p>
         </div>
       </div>

@@ -34,9 +34,9 @@ export function AppSidebar() {
         </div>
         <div>
           <h1 className="text-sm font-bold tracking-tight text-sidebar-foreground">
-            AutoParts
+            Sync Stock
           </h1>
-          <p className="text-[10px] text-muted-foreground">ERP System</p>
+          <p className="text-[10px] text-muted-foreground">Sistema de Gestao de Estoque</p>
         </div>
       </div>
 
