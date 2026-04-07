@@ -1,0 +1,12 @@
+bin/
+obj/
+TestResults/
+.vs/
+.idea/
+
+sync-stock-front/node_modules/
+sync-stock-front/.next/
+sync-stock-front/coverage/
+
+coverage/
+*.log
