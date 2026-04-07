@@ -1,37 +1,37 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using SyncStock.Contexts;
-using System.Linq;
+using SyncStock.Models;
+using SyncStock.Services.Auth;
 
 namespace SyncStock.Controllers;
 
 public class AuthController : Controller
 {
     // tem que referenciar cada pagina no controller seguindo o padrão nome : controller igual no JAVAFX 
-    private readonly EstoqueContext _context;
+    private readonly IAuthService _authService;
 
-    public AuthController(EstoqueContext context)
+    public AuthController(IAuthService authService)
     {
-        _context = context;
+        _authService = authService;
     }
+
     public IActionResult Login()
     {
         return View();
     }
 
     [HttpPost]
-
-    public IActionResult Login(string login, string senha)
+    public async Task<IActionResult> Login(string login, string senha, CancellationToken cancellationToken)
     {
-        var usuario = _context.Usuarios
-            .FirstOrDefault(u => u.Login == login && u.Senha == senha);
-
-        if (usuario != null)
+        var usuario = await _authService.AuthenticateAsync(login, senha, cancellationToken);
+        if (usuario is not null)
         {
-            //HttpContext.Session.SetString("UsuarioLogado", usuario.Login);
-            HttpContext.Session.SetString("UsuarioLogado", usuario.Nome);
-            HttpContext.Session.SetString("Perfil", usuario.Perfil);
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                _authService.CreatePrincipal(usuario));
 
-
+            SyncLegacySession(usuario);
             return RedirectToAction("Index", "Home");
         }
 
@@ -39,10 +39,16 @@ public class AuthController : Controller
         return View();
     }
 
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         HttpContext.Session.Clear();
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction("Login");
     }
 
+    private void SyncLegacySession(Usuario usuario)
+    {
+        HttpContext.Session.SetString("UsuarioLogado", usuario.Nome);
+        HttpContext.Session.SetString("Perfil", usuario.Perfil);
+    }
 }
