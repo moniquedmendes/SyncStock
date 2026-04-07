@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Diagnostics;
 using SyncStock.Backend.Tests.Infrastructure;
 
 namespace SyncStock.Backend.Tests;
@@ -96,6 +97,34 @@ public sealed class ApiAuthFlowTests : IClassFixture<SyncStockWebApplicationFact
 
         Assert.Equal(HttpStatusCode.NoContent, logoutResponse.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, meResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_endpoint_handles_a_small_burst_without_failing_or_slowing_excessively()
+    {
+        var stopwatch = Stopwatch.StartNew();
+
+        var responses = await Task.WhenAll(
+            Enumerable.Range(0, 20).Select(async _ =>
+            {
+                using var client = _factory.CreateClient(new WebApplicationFactoryClientOptions
+                {
+                    AllowAutoRedirect = false
+                });
+
+                return await client.PostAsJsonAsync("/api/auth/login", new
+                {
+                    login = "admin",
+                    senha = "admin123"
+                });
+            }));
+
+        stopwatch.Stop();
+
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.OK, response.StatusCode));
+        Assert.True(
+            stopwatch.Elapsed < TimeSpan.FromSeconds(5),
+            $"Expected the auth api burst to complete in under 5 seconds, but it took {stopwatch.Elapsed.TotalMilliseconds:F0}ms.");
     }
 
     private sealed record ApiCurrentUserResponse(string Nome, string Login, string Perfil);

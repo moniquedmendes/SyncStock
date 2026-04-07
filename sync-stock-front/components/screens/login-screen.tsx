@@ -8,14 +8,39 @@ import { Button } from "@/components/ui/button"
 import { useNavigation } from "@/lib/navigation-context"
 
 export function LoginScreen() {
-  const { login } = useNavigation()
+  const { isAuthLoading, login } = useNavigation()
   const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    login()
+    const normalizedUsername = username.trim()
+
+    if (!normalizedUsername || !password) {
+      setErrorMessage("Informe usuario e senha para continuar.")
+      return
+    }
+
+    setErrorMessage(null)
+    setIsSubmitting(true)
+
+    try {
+      await login({
+        login: normalizedUsername,
+        senha: password,
+      })
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel entrar agora. Tente novamente.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -42,6 +67,15 @@ export function LoginScreen() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {errorMessage ? (
+              <div
+                role="alert"
+                className="rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
+                {errorMessage}
+              </div>
+            ) : null}
+
             <div className="flex flex-col gap-2">
               <Label htmlFor="username" className="text-sm text-foreground">
                 Usuario
@@ -94,9 +128,10 @@ export function LoginScreen() {
 
             <Button
               type="submit"
+              disabled={isSubmitting || isAuthLoading}
               className="h-10 w-full bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Entrar
+              {isSubmitting ? "Entrando..." : "Entrar"}
             </Button>
           </form>
 

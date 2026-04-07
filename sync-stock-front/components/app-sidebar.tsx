@@ -68,7 +68,7 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="border-t border-sidebar-border px-3 py-3">
         <button
-          onClick={logout}
+          onClick={() => void logout()}
           className="flex w-full items-center gap-3 rounded px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent/50 hover:text-destructive-foreground"
         >
           <LogOut className="h-4 w-4" />

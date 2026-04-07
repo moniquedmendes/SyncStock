@@ -13,7 +13,17 @@ import { UsersScreen } from "@/components/screens/users-screen"
 import { SettingsScreen } from "@/components/screens/settings-screen"
 
 function AppContent() {
-  const { currentPage, isAuthenticated } = useNavigation()
+  const { currentPage, isAuthenticated, isAuthLoading } = useNavigation()
+
+  if (isAuthLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="rounded border border-border bg-card px-6 py-5 text-sm text-muted-foreground shadow-xl shadow-black/30">
+          Validando sessao...
+        </div>
+      </div>
+    )
+  }
 
   if (!isAuthenticated) {
     return <LoginScreen />

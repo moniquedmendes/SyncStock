@@ -2,8 +2,11 @@
 
 import { Bell, Search, User } from "lucide-react"
 import { Input } from "@/components/ui/input"
+import { useNavigation } from "@/lib/navigation-context"
 
 export function AppHeader() {
+  const { currentUser } = useNavigation()
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-accent px-6">
       {/* Search */}
@@ -28,8 +31,12 @@ export function AppHeader() {
             <User className="h-4 w-4 text-primary-foreground" />
           </div>
           <div className="hidden md:block">
-            <p className="text-sm font-medium text-foreground">Administrador</p>
-            <p className="text-xs text-muted-foreground">admin@syncstock.com</p>
+            <p className="text-sm font-medium text-foreground">
+              {currentUser?.nome ?? "Usuario"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {currentUser?.login ?? "Sem sessao ativa"}
+            </p>
           </div>
         </div>
       </div>

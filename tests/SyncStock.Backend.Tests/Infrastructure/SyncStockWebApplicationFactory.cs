@@ -1,4 +1,3 @@
-using System.Data.Common;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -11,7 +10,8 @@ namespace SyncStock.Backend.Tests.Infrastructure;
 
 public sealed class SyncStockWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private DbConnection? _connection;
+    private readonly string _testConnectionString = $"Data Source=syncstock-tests-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+    private SqliteConnection? _keepAliveConnection;
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -33,22 +33,15 @@ public sealed class SyncStockWebApplicationFactory : WebApplicationFactory<Progr
                 services.Remove(dbContextConfigurationDescriptor);
             }
 
-            var dbConnectionDescriptor = services.SingleOrDefault(
-                descriptor => descriptor.ServiceType == typeof(DbConnection));
-            if (dbConnectionDescriptor is not null)
-            {
-                services.Remove(dbConnectionDescriptor);
-            }
+            _keepAliveConnection = new SqliteConnection(_testConnectionString);
+            _keepAliveConnection.Open();
 
-            _connection = new SqliteConnection("DataSource=:memory:");
-            _connection.Open();
-
-            services.AddSingleton(_connection);
-            services.AddDbContext<EstoqueContext>((serviceProvider, options) =>
-                options.UseSqlite(serviceProvider.GetRequiredService<DbConnection>()));
+            services.AddDbContext<EstoqueContext>(options =>
+                options.UseSqlite(_testConnectionString));
 
             using var scope = services.BuildServiceProvider().CreateScope();
             var context = scope.ServiceProvider.GetRequiredService<EstoqueContext>();
+            context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
         });
     }
@@ -58,7 +51,7 @@ public sealed class SyncStockWebApplicationFactory : WebApplicationFactory<Progr
         base.Dispose(disposing);
         if (disposing)
         {
-            _connection?.Dispose();
+            _keepAliveConnection?.Dispose();
         }
     }
 }
