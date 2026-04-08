@@ -10,3 +10,4 @@ sync-stock-front/coverage/
 
 coverage/
 *.log
+/package-lock.json
