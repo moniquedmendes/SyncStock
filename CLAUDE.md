@@ -54,6 +54,7 @@ The current MVC application remains operational during the migration, while the 
 - Backend:
   - integration tests for MVC/API behavior and auth/session flows
   - stability burst tests for critical routes
+  - test projects must exclude generated `bin/` and `obj/` artifacts to avoid recursive MVC manifest copies
 - Frontend:
   - unit tests for state management and UI behavior
   - build validation on every CI run

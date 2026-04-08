@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SyncStock.Contexts;
 using SyncStock.Models;
 using SyncStock.Services.Auth;
+using SyncStock.Services.Products;
 
 //dotnet watch o comando pra iniciar ou dotnet run
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

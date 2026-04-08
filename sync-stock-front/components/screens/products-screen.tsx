@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Search, Plus } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -22,116 +22,78 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useNavigation } from "@/lib/navigation-context"
-
-const products = [
-  {
-    code: "PF-001",
-    name: "Pastilha de Freio Dianteira",
-    category: "Freios",
-    supplier: "Distribuidora Nacional",
-    currentQty: 150,
-    minimumStock: 30,
-    status: "Normal",
-  },
-  {
-    code: "FO-002",
-    name: "Filtro de Oleo Motor",
-    category: "Motor",
-    supplier: "Auto Pecas Brasil",
-    currentQty: 12,
-    minimumStock: 20,
-    status: "Estoque Baixo",
-  },
-  {
-    code: "AT-003",
-    name: "Amortecedor Traseiro",
-    category: "Suspensao",
-    supplier: "Importadora Paulista",
-    currentQty: 45,
-    minimumStock: 15,
-    status: "Normal",
-  },
-  {
-    code: "CD-004",
-    name: "Correia Dentada",
-    category: "Motor",
-    supplier: "Central Parts LTDA",
-    currentQty: 8,
-    minimumStock: 25,
-    status: "Estoque Baixo",
-  },
-  {
-    code: "VI-005",
-    name: "Vela de Ignicao",
-    category: "Eletrica",
-    supplier: "Mega Distribuidora",
-    currentQty: 200,
-    minimumStock: 50,
-    status: "Normal",
-  },
-  {
-    code: "DT-006",
-    name: "Disco de Freio Traseiro",
-    category: "Freios",
-    supplier: "Distribuidora Nacional",
-    currentQty: 35,
-    minimumStock: 10,
-    status: "Normal",
-  },
-  {
-    code: "BV-007",
-    name: "Bomba de Agua",
-    category: "Arrefecimento",
-    supplier: "Auto Pecas Brasil",
-    currentQty: 5,
-    minimumStock: 15,
-    status: "Estoque Baixo",
-  },
-  {
-    code: "JH-008",
-    name: "Junta do Cabecote",
-    category: "Motor",
-    supplier: "Central Parts LTDA",
-    currentQty: 22,
-    minimumStock: 10,
-    status: "Normal",
-  },
-  {
-    code: "RL-009",
-    name: "Rolamento de Roda",
-    category: "Suspensao",
-    supplier: "Importadora Paulista",
-    currentQty: 60,
-    minimumStock: 20,
-    status: "Normal",
-  },
-  {
-    code: "AL-010",
-    name: "Alternador",
-    category: "Eletrica",
-    supplier: "Mega Distribuidora",
-    currentQty: 3,
-    minimumStock: 8,
-    status: "Estoque Baixo",
-  },
-]
+import { fetchProducts, type Product } from "@/lib/products-api"
 
 export function ProductsScreen() {
   const { navigate } = useNavigation()
+  const [products, setProducts] = useState<Product[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [reloadVersion, setReloadVersion] = useState(0)
   const [nameFilter, setNameFilter] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [supplierFilter, setSupplierFilter] = useState("all")
 
-  const filtered = products.filter((p) => {
-    const matchName =
-      !nameFilter ||
-      p.name.toLowerCase().includes(nameFilter.toLowerCase())
-    const matchCategory =
-      categoryFilter === "all" || p.category === categoryFilter
-    const matchSupplier =
-      supplierFilter === "all" || p.supplier === supplierFilter
-    return matchName && matchCategory && matchSupplier
-  })
+  useEffect(() => {
+    let active = true
+
+    async function loadProducts() {
+      try {
+        setIsLoading(true)
+        setErrorMessage(null)
+        const data = await fetchProducts()
+        if (!active) {
+          return
+        }
+
+        setProducts(data)
+      } catch (error) {
+        if (!active) {
+          return
+        }
+
+        setErrorMessage(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel carregar os produtos.",
+        )
+      } finally {
+        if (active) {
+          setIsLoading(false)
+        }
+      }
+    }
+
+    void loadProducts()
+
+    return () => {
+      active = false
+    }
+  }, [reloadVersion])
+
+  const categoryOptions = useMemo(
+    () => Array.from(new Set(products.map((product) => product.categoria))),
+    [products],
+  )
+  const supplierOptions = useMemo(
+    () => Array.from(new Set(products.map((product) => product.fornecedor))),
+    [products],
+  )
+  const filtered = useMemo(
+    () =>
+      products.filter((product) => {
+        const matchName =
+          !nameFilter ||
+          product.nome.toLowerCase().includes(nameFilter.toLowerCase())
+        const matchCategory =
+          categoryFilter === "all" || product.categoria === categoryFilter
+        const matchSupplier =
+          supplierFilter === "all" || product.fornecedor === supplierFilter
+
+        return matchName && matchCategory && matchSupplier
+      }),
+    [products, nameFilter, categoryFilter, supplierFilter],
+  )
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -187,11 +149,11 @@ export function ProductsScreen() {
                 </SelectTrigger>
                 <SelectContent className="border-border bg-card">
                   <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="Motor">Motor</SelectItem>
-                  <SelectItem value="Suspensao">Suspensao</SelectItem>
-                  <SelectItem value="Eletrica">Eletrica</SelectItem>
-                  <SelectItem value="Freios">Freios</SelectItem>
-                  <SelectItem value="Arrefecimento">Arrefecimento</SelectItem>
+                  {categoryOptions.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -208,37 +170,46 @@ export function ProductsScreen() {
                 </SelectTrigger>
                 <SelectContent className="border-border bg-card">
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="Distribuidora Nacional">
-                    Distribuidora Nacional
-                  </SelectItem>
-                  <SelectItem value="Auto Pecas Brasil">
-                    Auto Pecas Brasil
-                  </SelectItem>
-                  <SelectItem value="Importadora Paulista">
-                    Importadora Paulista
-                  </SelectItem>
-                  <SelectItem value="Central Parts LTDA">
-                    Central Parts LTDA
-                  </SelectItem>
-                  <SelectItem value="Mega Distribuidora">
-                    Mega Distribuidora
-                  </SelectItem>
+                  {supplierOptions.map((supplier) => (
+                    <SelectItem key={supplier} value={supplier}>
+                      {supplier}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <Button
               size="sm"
+              type="button"
               className="h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => setReloadVersion((current) => current + 1)}
             >
               <Search className="mr-1.5 h-4 w-4" />
-              Buscar
+              Atualizar
             </Button>
           </div>
         </CardContent>
       </Card>
 
+      {errorMessage ? (
+        <div
+          role="alert"
+          className="rounded border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+        >
+          {errorMessage}
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <Card className="border-border bg-card">
+          <CardContent className="px-6 py-10 text-sm text-muted-foreground">
+            Carregando produtos...
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Products Table */}
-      <Card className="border-border bg-card">
+      <Card className="border-border bg-card" aria-busy={isLoading}>
         <CardContent className="p-0">
           <Table>
             <TableHeader>
@@ -267,43 +238,54 @@ export function ProductsScreen() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filtered.map((product, i) => (
-                <TableRow
-                  key={product.code}
-                  className={`border-border cursor-pointer transition-colors hover:bg-secondary/50 ${i % 2 === 0 ? "bg-card" : "bg-secondary/20"}`}
-                >
-                  <TableCell className="font-mono text-sm text-muted-foreground">
-                    {product.code}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium text-card-foreground">
-                    {product.name}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {product.category}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {product.supplier}
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-card-foreground">
-                    {product.currentQty}
-                  </TableCell>
-                  <TableCell className="text-right text-sm text-muted-foreground">
-                    {product.minimumStock}
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={
-                        product.status === "Normal"
-                          ? "border-none bg-secondary text-muted-foreground"
-                          : "border-none bg-destructive/20 text-destructive-foreground"
-                      }
-                    >
-                      {product.status}
-                    </Badge>
+              {!isLoading && filtered.length === 0 ? (
+                <TableRow className="border-border">
+                  <TableCell
+                    colSpan={7}
+                    className="py-8 text-center text-sm text-muted-foreground"
+                  >
+                    Nenhum produto encontrado com os filtros atuais.
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filtered.map((product, i) => (
+                  <TableRow
+                    key={product.id}
+                    className={`border-border cursor-pointer transition-colors hover:bg-secondary/50 ${i % 2 === 0 ? "bg-card" : "bg-secondary/20"}`}
+                  >
+                    <TableCell className="font-mono text-sm text-muted-foreground">
+                      {product.codigo}
+                    </TableCell>
+                    <TableCell className="text-sm font-medium text-card-foreground">
+                      {product.nome}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {product.categoria}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {product.fornecedor}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-card-foreground">
+                      {product.quantidadeEstoque}
+                    </TableCell>
+                    <TableCell className="text-right text-sm text-muted-foreground">
+                      {product.estoqueMinimo}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={
+                          product.statusEstoque === "Normal"
+                            ? "border-none bg-secondary text-muted-foreground"
+                            : "border-none bg-destructive/20 text-destructive-foreground"
+                        }
+                      >
+                        {product.statusEstoque}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

@@ -23,4 +23,11 @@
     <ProjectReference Include="..\..\SyncStock.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="bin\**\*.cs;obj\**\*.cs" />
+    <Content Remove="bin\**\*;obj\**\*" />
+    <EmbeddedResource Remove="bin\**\*;obj\**\*" />
+    <None Remove="bin\**\*;obj\**\*" />
+  </ItemGroup>
+
 </Project>

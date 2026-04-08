@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useNavigation } from "@/lib/navigation-context"
+import { createProduct } from "@/lib/products-api"
 
 const categories = [
   "Motor",
@@ -57,14 +58,51 @@ export function ProductRegisterScreen() {
     stockQuantity: "",
     minimumStock: "",
   })
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   function handleChange(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }))
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+
+    const requiredValues = Object.values(formData)
+    if (requiredValues.some((value) => value.trim() === "")) {
+      setErrorMessage("Preencha todos os campos antes de salvar o produto.")
+      return
+    }
+
+    setErrorMessage(null)
+    setIsSubmitting(true)
+
+    try {
+      await createProduct({
+        codigo: formData.code,
+        nome: formData.name,
+        categoria: formData.category,
+        marca: formData.brand,
+        fornecedor: formData.supplier,
+        preco: Number(formData.price),
+        quantidadeEstoque: Number(formData.stockQuantity),
+        estoqueMinimo: Number(formData.minimumStock),
+      })
+
+      navigate("products")
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel salvar o produto.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Header */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate("products")}
@@ -90,8 +128,17 @@ export function ProductRegisterScreen() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-x-6 gap-y-5">
-            {/* Code */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            {errorMessage ? (
+              <div
+                role="alert"
+                className="rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
+                {errorMessage}
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5">
             <div className="flex flex-col gap-2">
               <Label htmlFor="code" className="text-sm text-foreground">
                 Codigo
@@ -105,7 +152,6 @@ export function ProductRegisterScreen() {
               />
             </div>
 
-            {/* Name */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="name" className="text-sm text-foreground">
                 Nome da Peca
@@ -119,7 +165,6 @@ export function ProductRegisterScreen() {
               />
             </div>
 
-            {/* Category */}
             <div className="flex flex-col gap-2">
               <Label className="text-sm text-foreground">Categoria</Label>
               <Select
@@ -139,7 +184,6 @@ export function ProductRegisterScreen() {
               </Select>
             </div>
 
-            {/* Brand */}
             <div className="flex flex-col gap-2">
               <Label className="text-sm text-foreground">Marca</Label>
               <Select
@@ -159,7 +203,6 @@ export function ProductRegisterScreen() {
               </Select>
             </div>
 
-            {/* Supplier */}
             <div className="flex flex-col gap-2">
               <Label className="text-sm text-foreground">Fornecedor</Label>
               <Select
@@ -179,7 +222,6 @@ export function ProductRegisterScreen() {
               </Select>
             </div>
 
-            {/* Price */}
             <div className="flex flex-col gap-2">
               <Label htmlFor="price" className="text-sm text-foreground">
                 Preco (R$)
@@ -194,7 +236,6 @@ export function ProductRegisterScreen() {
               />
             </div>
 
-            {/* Stock Quantity */}
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="stockQuantity"
@@ -212,7 +253,6 @@ export function ProductRegisterScreen() {
               />
             </div>
 
-            {/* Minimum Stock */}
             <div className="flex flex-col gap-2">
               <Label
                 htmlFor="minimumStock"
@@ -229,26 +269,26 @@ export function ProductRegisterScreen() {
                 className="h-10 border-border bg-secondary text-foreground placeholder:text-muted-foreground focus-visible:ring-primary"
               />
             </div>
-          </div>
+            </div>
 
-          {/* Action Buttons */}
-          <div className="mt-8 flex justify-end gap-3">
+            <div className="flex justify-end gap-3">
             <Button
-              variant="outline"
-              className="border-destructive/50 text-destructive-foreground hover:bg-destructive/10"
-            >
-              Excluir
-            </Button>
-            <Button
+              type="button"
               variant="outline"
               className="border-border text-foreground hover:bg-secondary"
+              onClick={() => navigate("products")}
             >
-              Editar
+              Cancelar
             </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-              Salvar Produto
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              {isSubmitting ? "Salvando..." : "Salvar Produto"}
             </Button>
-          </div>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
