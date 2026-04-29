@@ -5,6 +5,7 @@ using SyncStock.Contexts;
 using SyncStock.Models;
 using SyncStock.Services.Auth;
 using SyncStock.Services.Products;
+using SyncStock.Services.StockMovements;
 
 //dotnet watch o comando pra iniciar ou dotnet run
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IStockMovementService, StockMovementService>();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

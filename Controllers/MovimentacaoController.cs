@@ -1,16 +1,21 @@
 using Microsoft.AspNetCore.Mvc;
 using SyncStock.Contexts;
-using SyncStock.Models;
+using SyncStock.Contracts.StockMovements;
+using SyncStock.Services.StockMovements;
 
 namespace SyncStock.Controllers
 {
     public class MovimentacaoController : Controller
     {
         private readonly EstoqueContext _context;
+        private readonly IStockMovementService _stockMovementService;
 
-        public MovimentacaoController(EstoqueContext context)
+        public MovimentacaoController(
+            EstoqueContext context,
+            IStockMovementService stockMovementService)
         {
             _context = context;
+            _stockMovementService = stockMovementService;
         }
 
         public IActionResult Venda()
@@ -23,34 +28,34 @@ namespace SyncStock.Controllers
         }
 
         [HttpPost]
-        public IActionResult Venda(int produtoId, int quantidade)
+        public async Task<IActionResult> Venda(int produtoId, int quantidade)
         {
-            var produto = _context.Produtos.Find(produtoId);
+            var result = await _stockMovementService.CreateMovementAsync(
+                new CreateStockMovementRequest(
+                    produtoId,
+                    "Saida",
+                    quantidade,
+                    DateTime.Now,
+                    "Venda realizada"));
 
-            if (produto == null)
-                return RedirectToAction("Venda");
-
-            if (produto.QuantidadeEstoque < quantidade)
+            if (!result.Succeeded)
             {
-                TempData["Erro"] = "Estoque insuficiente!";
+                TempData["Erro"] = ToUserMessage(result.Error);
                 return RedirectToAction("Venda");
             }
 
-            produto.QuantidadeEstoque -= quantidade;
-
-            var movimentacao = new Movimentacao
-            {
-                ProdutoId = produtoId,
-                Tipo = "Saida",
-                Quantidade = quantidade,
-                Data = DateTime.Now,
-                Observacao = "Venda realizada"
-            };
-
-            _context.Movimentacoes.Add(movimentacao);
-            _context.SaveChanges();
-
             return RedirectToAction("Produtos", "Produto");
+        }
+
+        private static string ToUserMessage(StockMovementError error)
+        {
+            return error switch
+            {
+                StockMovementError.InvalidQuantity => "Quantidade deve ser maior que zero.",
+                StockMovementError.InsufficientStock => "Estoque insuficiente!",
+                StockMovementError.ProductNotFound => "Produto nao encontrado ou inativo.",
+                _ => "Nao foi possivel registrar a movimentacao."
+            };
         }
     }
 }
