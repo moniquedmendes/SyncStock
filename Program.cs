@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using SyncStock.Contexts;
 using SyncStock.Models;
 using SyncStock.Services.Auth;
+using SyncStock.Services.Dashboard;
 using SyncStock.Services.Products;
 using SyncStock.Services.StockMovements;
 
@@ -13,6 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStockMovementService, StockMovementService>();
 builder.Services.AddScoped<IPasswordHasher<Usuario>, PasswordHasher<Usuario>>();

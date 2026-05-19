@@ -21,6 +21,34 @@ export interface StockMovement {
   resultingStock: number
 }
 
+export interface StockMovementHistoryItem {
+  id: number
+  productId: number
+  productCode: string
+  productName: string
+  type: StockMovementType
+  quantity: number
+  date: string
+  observation: string
+}
+
+export interface StockMovementList {
+  items: StockMovementHistoryItem[]
+  page: number
+  pageSize: number
+  totalCount: number
+  totalPages: number
+}
+
+export interface StockMovementQuery {
+  productId?: number
+  type?: StockMovementType
+  from?: string
+  to?: string
+  page?: number
+  pageSize?: number
+}
+
 export class StockMovementsApiError extends Error {
   status: number
 
@@ -51,6 +79,56 @@ async function readProblemPayload(response: Response): Promise<ProblemPayload | 
 
 function toErrorMessage(problem: ProblemPayload | null): string {
   return problem?.detail ?? problem?.title ?? "Nao foi possivel registrar a movimentacao."
+}
+
+function toMovementQueryString(query: StockMovementQuery = {}): string {
+  const params = new URLSearchParams()
+
+  if (query.productId) {
+    params.set("productId", String(query.productId))
+  }
+
+  if (query.type) {
+    params.set("type", query.type)
+  }
+
+  if (query.from) {
+    params.set("from", query.from)
+  }
+
+  if (query.to) {
+    params.set("to", query.to)
+  }
+
+  if (query.page) {
+    params.set("page", String(query.page))
+  }
+
+  if (query.pageSize) {
+    params.set("pageSize", String(query.pageSize))
+  }
+
+  const queryString = params.toString()
+  return queryString ? `?${queryString}` : ""
+}
+
+export async function fetchStockMovements(
+  query?: StockMovementQuery,
+): Promise<StockMovementList> {
+  const response = await fetch(`/api/stock-movements${toMovementQueryString(query)}`, {
+    cache: "no-store",
+    credentials: "include",
+  })
+
+  if (!response.ok) {
+    const problem = await readProblemPayload(response)
+    throw new StockMovementsApiError(
+      problem?.detail ?? problem?.title ?? "Nao foi possivel carregar as movimentacoes.",
+      response.status,
+    )
+  }
+
+  return (await response.json()) as StockMovementList
 }
 
 export async function createStockMovement(

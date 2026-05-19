@@ -17,6 +17,20 @@ public sealed class StockMovementsApiController : ControllerBase
         _stockMovementService = stockMovementService;
     }
 
+    [HttpGet]
+    public async Task<ActionResult<StockMovementListResponse>> ListMovements(
+        [FromQuery] int? productId,
+        [FromQuery] string? type,
+        [FromQuery] DateTime? from,
+        [FromQuery] DateTime? to,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10,
+        CancellationToken cancellationToken = default)
+    {
+        var query = new StockMovementQuery(productId, type, from, to, page, pageSize);
+        return Ok(await _stockMovementService.ListMovementsAsync(query, cancellationToken));
+    }
+
     [HttpPost]
     public async Task<ActionResult<StockMovementResponse>> CreateMovement(
         [FromBody] CreateStockMovementRequest request,

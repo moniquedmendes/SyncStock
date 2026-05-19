@@ -95,6 +95,71 @@ public sealed class StockMovementService : IStockMovementService
                 resultingStock));
     }
 
+    public async Task<StockMovementListResponse> ListMovementsAsync(
+        StockMovementQuery query,
+        CancellationToken cancellationToken = default)
+    {
+        var page = Math.Max(1, query.Page);
+        var pageSize = Math.Clamp(query.PageSize, 1, 100);
+        var movementType = string.IsNullOrWhiteSpace(query.Type)
+            ? null
+            : NormalizeType(query.Type);
+
+        if (!string.IsNullOrWhiteSpace(query.Type) && movementType is null)
+        {
+            return new StockMovementListResponse([], page, pageSize, 0, 0);
+        }
+
+        var movements = _context.Movimentacoes
+            .AsNoTracking()
+            .Include(movement => movement.Produto)
+            .AsQueryable();
+
+        if (query.ProductId is not null)
+        {
+            movements = movements.Where(movement => movement.ProdutoId == query.ProductId);
+        }
+
+        if (movementType is not null)
+        {
+            movements = movements.Where(movement => movement.Tipo == movementType);
+        }
+
+        if (query.From is not null)
+        {
+            movements = movements.Where(movement => movement.Data >= query.From.Value.Date);
+        }
+
+        if (query.To is not null)
+        {
+            var inclusiveEnd = query.To.Value.Date.AddDays(1);
+            movements = movements.Where(movement => movement.Data < inclusiveEnd);
+        }
+
+        var totalCount = await movements.CountAsync(cancellationToken);
+        var totalPages = totalCount == 0
+            ? 0
+            : (int)Math.Ceiling(totalCount / (double)pageSize);
+
+        var items = await movements
+            .OrderByDescending(movement => movement.Data)
+            .ThenByDescending(movement => movement.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(movement => new StockMovementHistoryItemResponse(
+                movement.Id,
+                movement.ProdutoId,
+                movement.Produto.Codigo,
+                movement.Produto.Nome,
+                movement.Tipo,
+                movement.Quantidade,
+                movement.Data,
+                movement.Observacao))
+            .ToListAsync(cancellationToken);
+
+        return new StockMovementListResponse(items, page, pageSize, totalCount, totalPages);
+    }
+
     private async Task<int> ApplyStockChangeAsync(
         int productId,
         string movementType,

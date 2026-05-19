@@ -7,6 +7,10 @@ public interface IStockMovementService
     Task<StockMovementResult> CreateMovementAsync(
         CreateStockMovementRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<StockMovementListResponse> ListMovementsAsync(
+        StockMovementQuery query,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed record StockMovementResult(
