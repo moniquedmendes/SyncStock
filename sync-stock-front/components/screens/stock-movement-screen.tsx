@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
@@ -13,27 +13,114 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { fetchProducts, type Product } from "@/lib/products-api"
+import {
+  createStockMovement,
+  type StockMovementType,
+} from "@/lib/stock-movements-api"
 import { cn } from "@/lib/utils"
 
-const productsList = [
-  "PF-001 - Pastilha de Freio Dianteira",
-  "FO-002 - Filtro de Oleo Motor",
-  "AT-003 - Amortecedor Traseiro",
-  "CD-004 - Correia Dentada",
-  "VI-005 - Vela de Ignicao",
-  "DT-006 - Disco de Freio Traseiro",
-  "BV-007 - Bomba de Agua",
-  "JH-008 - Junta do Cabecote",
-  "RL-009 - Rolamento de Roda",
-  "AL-010 - Alternador",
-]
+function todayAsInputValue() {
+  return new Date().toISOString().slice(0, 10)
+}
 
 export function StockMovementScreen() {
-  const [movementType, setMovementType] = useState<"entry" | "exit">("entry")
+  const [movementType, setMovementType] = useState<StockMovementType>("Entrada")
+  const [products, setProducts] = useState<Product[]>([])
   const [product, setProduct] = useState("")
   const [quantity, setQuantity] = useState("")
-  const [date, setDate] = useState("")
+  const [date, setDate] = useState(todayAsInputValue)
   const [observation, setObservation] = useState("")
+  const [isLoadingProducts, setIsLoadingProducts] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [successMessage, setSuccessMessage] = useState<string | null>(null)
+  const [reloadVersion, setReloadVersion] = useState(0)
+
+  useEffect(() => {
+    let active = true
+
+    async function loadProducts() {
+      try {
+        setIsLoadingProducts(true)
+        setErrorMessage(null)
+        const data = await fetchProducts()
+        if (active) {
+          setProducts(data)
+        }
+      } catch (error) {
+        if (active) {
+          setErrorMessage(
+            error instanceof Error
+              ? error.message
+              : "Nao foi possivel carregar os produtos.",
+          )
+        }
+      } finally {
+        if (active) {
+          setIsLoadingProducts(false)
+        }
+      }
+    }
+
+    void loadProducts()
+
+    return () => {
+      active = false
+    }
+  }, [reloadVersion])
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
+
+    const parsedQuantity = Number(quantity)
+    if (!product) {
+      setErrorMessage("Selecione um produto antes de registrar a movimentacao.")
+      setSuccessMessage(null)
+      return
+    }
+
+    if (!Number.isInteger(parsedQuantity) || parsedQuantity <= 0) {
+      setErrorMessage("Quantidade deve ser maior que zero.")
+      setSuccessMessage(null)
+      return
+    }
+
+    if (!date) {
+      setErrorMessage("Informe a data da movimentacao.")
+      setSuccessMessage(null)
+      return
+    }
+
+    setIsSubmitting(true)
+    setErrorMessage(null)
+    setSuccessMessage(null)
+
+    try {
+      const movement = await createStockMovement({
+        productId: Number(product),
+        type: movementType,
+        quantity: parsedQuantity,
+        date,
+        observation,
+      })
+
+      setQuantity("")
+      setObservation("")
+      setSuccessMessage(
+        `${movementType} registrada. Estoque atual: ${movement.resultingStock}.`,
+      )
+      setReloadVersion((current) => current + 1)
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel registrar a movimentacao.",
+      )
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -55,17 +142,43 @@ export function StockMovementScreen() {
             </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
+            {errorMessage ? (
+              <div
+                role="alert"
+                className="rounded border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
+                {errorMessage}
+              </div>
+            ) : null}
+
+            {successMessage ? (
+              <div
+                role="status"
+                className="rounded border border-primary/40 bg-primary/10 px-3 py-2 text-sm text-primary-foreground"
+              >
+                {successMessage}
+              </div>
+            ) : null}
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Product */}
             <div className="flex flex-col gap-2">
               <Label className="text-sm text-foreground">Produto</Label>
               <Select value={product} onValueChange={setProduct}>
                 <SelectTrigger className="h-10 w-full border-border bg-secondary text-foreground">
-                  <SelectValue placeholder="Selecione o produto" />
+                  <SelectValue
+                    placeholder={
+                      isLoadingProducts
+                        ? "Carregando produtos..."
+                        : "Selecione o produto"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent className="border-border bg-card">
-                  {productsList.map((p) => (
-                    <SelectItem key={p} value={p}>
-                      {p}
+                  {products.map((item) => (
+                    <SelectItem key={item.id} value={String(item.id)}>
+                      {item.codigo} - {item.nome} (Estoque:{" "}
+                      {item.quantidadeEstoque})
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -79,10 +192,11 @@ export function StockMovementScreen() {
               </Label>
               <div className="flex gap-2">
                 <button
-                  onClick={() => setMovementType("entry")}
+                  type="button"
+                  onClick={() => setMovementType("Entrada")}
                   className={cn(
                     "flex-1 rounded border px-4 py-2.5 text-sm font-medium transition-colors",
-                    movementType === "entry"
+                    movementType === "Entrada"
                       ? "border-primary bg-primary/10 text-chart-2"
                       : "border-border bg-secondary text-muted-foreground hover:bg-secondary/80"
                   )}
@@ -90,10 +204,11 @@ export function StockMovementScreen() {
                   Entrada
                 </button>
                 <button
-                  onClick={() => setMovementType("exit")}
+                  type="button"
+                  onClick={() => setMovementType("Saida")}
                   className={cn(
                     "flex-1 rounded border px-4 py-2.5 text-sm font-medium transition-colors",
-                    movementType === "exit"
+                    movementType === "Saida"
                       ? "border-destructive bg-destructive/10 text-destructive-foreground"
                       : "border-border bg-secondary text-muted-foreground hover:bg-secondary/80"
                   )}
@@ -148,15 +263,18 @@ export function StockMovementScreen() {
 
             {/* Submit */}
             <Button
+              type="submit"
+              disabled={isSubmitting || isLoadingProducts}
               className={cn(
                 "mt-2 h-10 w-full text-sm font-medium",
-                movementType === "entry"
+                movementType === "Entrada"
                   ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : "bg-destructive text-primary-foreground hover:bg-destructive/90"
               )}
             >
-              Confirmar {movementType === "entry" ? "Entrada" : "Saida"}
+              {isSubmitting ? "Registrando..." : `Confirmar ${movementType}`}
             </Button>
+            </form>
           </CardContent>
         </Card>
       </div>
